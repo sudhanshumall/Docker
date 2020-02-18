@@ -1,0 +1,48 @@
+version: '3.1'
+
+services:
+  gateway:
+    ports:
+      - "80:80"
+    networks:
+      - snw_gateway
+    working_dir: /opt/app
+
+  zookeeper:
+    ports:
+      - "2181:2181"
+    networks:
+      - snw_gateway
+    volumes:
+      - zookeeper-data:/opt/zookeeper-3.4.13
+
+  kafka:
+    ports:
+      - "9092:9092"
+    networks:
+      - snw_gateway
+    volumes:
+      - kafka-data:/kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+  activemq:
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    networks:
+      - snw_gateway
+    volumes:
+      - activemq-data:/activemq/data
+
+networks: 
+  snw_gateway:
+
+volumes:
+  zookeeper-data:
+  kafka-data:
+  activemq-data:

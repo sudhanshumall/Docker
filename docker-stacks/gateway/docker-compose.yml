@@ -1,0 +1,18 @@
+version: '3.1'
+
+services:
+  gateway:
+    image: nginx
+    #build: .
+    #image: sudhanshumall/nginx
+
+  zookeeper:
+    image: wurstmeister/zookeeper
+
+  kafka:
+    image: wurstmeister/kafka
+
+  activemq:
+    image: rmohr/activemq
+
+

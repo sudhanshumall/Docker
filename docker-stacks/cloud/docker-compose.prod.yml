@@ -1,0 +1,166 @@
+version: '3.1'
+
+services:
+  cloud:
+    image: nginx
+    ports:
+      - "80:80"
+    networks:
+      - snw_cloud
+    working_dir: /opt/app
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.nginx == true
+      replicas: 4
+      update_config:
+        parallelism: 1
+        ##delays: 10s
+      restart_policy:
+        condition: on-failure
+
+  zookeeper:
+    ports:
+      - "2181:2181"
+    networks:
+      - snw_cloud
+    volumes:
+      - zookeeper-data:/opt/zookeeper-3.4.13
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.zoo == true
+      replicas: 1
+      update_config:
+        parallelism: 1
+        ##delays: 10s
+      restart_policy:
+        condition: on-failure
+
+  kafka:
+    ports:
+      - "9092:9092"
+    networks:
+      - snw_cloud
+    volumes:
+      - kafka-data:/kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.kaf == true
+      replicas: 1
+      update_config:
+        parallelism: 1
+        ##delays: 10s
+      restart_policy:
+        condition: on-failure
+
+  activemq:
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    networks:
+      - snw_cloud
+    volumes:
+      - activemq-data:/activemq/data
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.activemq == true
+      replicas: 1
+      update_config:
+        parallelism: 1
+        ##delays: 10s
+      restart_policy:
+        condition: on-failure
+
+  redis:
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    networks:
+      - snw_cloud
+    volumes:
+      - redis-data:/data
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.redis == true
+      replicas: 1
+      update_config:
+        parallelism: 1
+        ##delays: 10s
+      restart_policy:
+        condition: on-failure
+
+  mysql:
+    environment:
+      MYSQL_DATABASE: 'testdb'
+      MYSQL_USER: 'dbuser'
+      MYSQL_PASSWORD: 'dbuser@password'
+      MYSQL_ROOT_PASSWORD: 'dbrootuser@password'
+    ports:
+      - '3306:3306'
+    networks:
+      - snw_cloud
+    volumes:
+      - mysql-data:/var/lib/mysql
+    deploy:
+      mode: replicated
+      placement:
+        constraints:
+          - node.role == worker
+          - node.labels.mysql == true
+      replicas: 1
+      update_config:
+        parallelism: 1
+        ##delays: 10s
+      restart_policy:
+        condition: on-failure
+
+  mongo:
+    ports:
+      - "27017:27017"
+    networks:
+      - snw_cloud
+    volumes:
+      - mongo-data:/data/db
+    deploy:
+      mode: replicated
+      placement:
+        constraints: 
+          - node.role == worker
+          - node.labels.mongo == true
+      replicas: 1
+      update_config:
+        parallelism: 1
+        ##delays: 10s
+      restart_policy:
+        condition: on-failure
+
+networks: 
+  snw_cloud:
+
+volumes:
+  zookeeper-data:
+  kafka-data:
+  activemq-data:
+  redis-data:
+  mysql-data:
+  mongo-data:

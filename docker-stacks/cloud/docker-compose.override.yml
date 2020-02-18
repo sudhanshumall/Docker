@@ -1,0 +1,81 @@
+version: '3.1'
+
+services:
+  cloud:
+    ports:
+      - "80:80"
+    networks:
+      - snw_cloud
+    working_dir: /opt/app
+
+  zookeeper:
+    ports:
+      - "2181:2181"
+    networks:
+      - snw_cloud
+    volumes:
+      - zookeeper-data:/opt/zookeeper-3.4.13
+
+  kafka:
+    ports:
+      - "9092:9092"
+    networks:
+      - snw_cloud
+    volumes:
+      - kafka-data:/kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+
+  activemq:
+    ports:
+      - "61616:61616"
+      - "8161:8161"
+    networks:
+      - snw_cloud
+    volumes:
+      - activemq-data:/activemq/data
+
+  redis:
+    command: ["redis-server", "--appendonly", "yes"]
+    ports:
+      - "6379:6379"
+    networks:
+      - snw_cloud
+    volumes:
+      - redis-data:/data
+
+  mysql:
+    environment:
+      MYSQL_DATABASE: 'testdb'
+      MYSQL_USER: 'dbuser'
+      MYSQL_PASSWORD: 'dbuser@password'
+      MYSQL_ROOT_PASSWORD: 'dbrootuser@password'
+    ports:
+      - '3306:3306'
+    networks:
+      - snw_cloud
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+  mongo:
+    ports:
+    - "27017:27017"
+    networks:
+      - snw_cloud
+    volumes:
+    - mongo-data:/data/db
+
+networks: 
+  snw_cloud:
+
+volumes:
+  zookeeper-data:
+  kafka-data:
+  activemq-data:
+  redis-data:
+  mysql-data:
+  mongo-data:
